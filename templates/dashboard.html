@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>Dashboard | TaskFlow</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-page">
+
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">✓</div>
+                <span>TaskFlow</span>
+            </div>
+
+            <div class="sidebar-section-label">WORKSPACE</div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}"
+                   class="nav-link active">
+                    <span>▦</span> Dashboard
+                </a>
+
+                <a href="#tasks-section" class="nav-link">
+                    <span>☑</span> My Tasks
+                </a>
+
+                <button
+                    type="button"
+                    class="nav-link nav-button"
+                    id="addTaskSidebar"
+                >
+                    <span>＋</span> Add Task
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <form method="POST" action="{{ url_for('logout') }}">
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <button type="submit" class="logout-button">
+                        ↪ Logout
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h2>Dashboard</h2>
+                    <p>Welcome back, {{ username }}!</p>
+                </div>
+
+                <div class="user-avatar">
+                    {{ username[0]|upper }}
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+
+                <section class="welcome-banner">
+                    <div>
+                        <p class="banner-label">YOUR WORKSPACE</p>
+                        <h1>Stay organized, stay productive.</h1>
+                        <p>Track your progress and manage everything in one place.</p>
+                    </div>
+
+                    <button type="button" class="btn-white" id="addTaskTop">
+                        + New Task
+                    </button>
+                </section>
+
+                <section class="stats-grid">
+
+                    <div class="stat-card">
+                        <div class="stat-icon purple">▦</div>
+                        <p>Total Tasks</p>
+                        <h2 id="totalTasks">{{ total_tasks }}</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon orange">◷</div>
+                        <p>Pending</p>
+                        <h2 id="pendingTasks">{{ pending_tasks }}</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon blue">↻</div>
+                        <p>In Progress</p>
+                        <h2 id="progressTasks">{{ progress_tasks }}</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon green">✓</div>
+                        <p>Completed</p>
+                        <h2 id="completedTasks">{{ completed_tasks }}</h2>
+                    </div>
+
+                </section>
+
+                <section class="tasks-panel" id="tasks-section">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2>My Tasks</h2>
+                            <p>Manage and track your daily activities.</p>
+                        </div>
+
+                        <button type="button"
+                                class="btn-primary"
+                                id="addTaskMain">
+                            + Add Task
+                        </button>
+                    </div>
+
+                    <div class="task-toolbar">
+
+                        <input
+                            type="search"
+                            id="searchTasks"
+                            placeholder="Search tasks..."
+                            aria-label="Search tasks"
+                        >
+
+                        <select id="filterStatus" aria-label="Filter by status">
+                            <option value="All">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+
+                        <select id="filterPriority" aria-label="Filter by priority">
+                            <option value="All">All Priority</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="task-table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="taskTableBody">
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        Loading tasks...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="taskModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true"
+             aria-labelledby="modalTitle">
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Task</h2>
+
+                <button type="button"
+                        class="close-modal"
+                        id="closeTaskModal"
+                        aria-label="Close">
+                    ×
+                </button>
+            </div>
+
+            <form id="taskForm">
+
+                <input type="hidden" id="taskId">
+
+                <div class="form-group">
+                    <label for="taskTitle">Task Title</label>
+                    <input
+                        type="text"
+                        id="taskTitle"
+                        placeholder="Enter task title"
+                        maxlength="200"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="taskDescription">Description</label>
+                    <textarea
+                        id="taskDescription"
+                        rows="3"
+                        placeholder="Describe your task"
+                    ></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskPriority">Priority</label>
+                        <select id="taskPriority">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskStatus">Status</label>
+                        <select id="taskStatus">
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="taskDueDate">Due Date</label>
+                    <input type="date" id="taskDueDate">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button"
+                            class="btn-secondary"
+                            id="cancelTask">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn-primary"
+                            id="saveTaskButton">
+                        Save Task
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
